@@ -16,7 +16,7 @@ declare global {
   }
 }
 
-export const authMiddleware = async (
+export const verifyFirebaseToken = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -28,12 +28,27 @@ export const authMiddleware = async (
       throw new UnauthorizedError('No token provided');
     }
 
-    // Verify Firebase token
-    const decodedToken = await admin.auth().verifyIdToken(token);
-    req.user = {
-      uid: decodedToken.uid,
-      email: decodedToken.email,
-    };
+    // Development mode: accept Firebase UID directly as token
+    if (process.env.NODE_ENV === 'development') {
+      logger.debug('Dev mode auth: using token as UID', { token });
+      req.user = {
+        uid: token,
+        email: token, // Use as both for dev
+      };
+      return next();
+    }
+
+    // Production mode: verify Firebase token
+    try {
+      const decodedToken = await admin.auth().verifyIdToken(token);
+      req.user = {
+        uid: decodedToken.uid,
+        email: decodedToken.email,
+      };
+    } catch (firebaseError) {
+      logger.error('Firebase token verification failed:', { error: String(firebaseError) });
+      throw new UnauthorizedError('Invalid or expired token');
+    }
 
     next();
   } catch (error) {

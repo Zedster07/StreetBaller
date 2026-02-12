@@ -6,11 +6,11 @@ import 'express-async-errors';
 import dotenv from 'dotenv';
 import { logger } from './utils/logger';
 
-// Routes (to be implemented)
-// import authRoutes from './routes/auth.routes';
-// import userRoutes from './routes/user.routes';
-// import teamRoutes from './routes/team.routes';
-// import matchRoutes from './routes/match.routes';
+// Routes
+import authRoutes from './routes/auth.routes';
+import userRoutes from './routes/user.routes';
+import teamRoutes from './routes/team.routes';
+import matchRoutes from './routes/match.routes';
 
 // Middleware
 import { errorHandler } from './middleware/errorHandler';
@@ -44,13 +44,13 @@ app.get('/health', (req, res) => {
 });
 
 // ============================================================================
-// API Routes (to be mounted)
+// API Routes
 // ============================================================================
 
-// app.use('/api/auth', authRoutes);
-// app.use('/api/users', userRoutes);
-// app.use('/api/teams', teamRoutes);
-// app.use('/api/matches', matchRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/teams', teamRoutes);
+app.use('/api/matches', matchRoutes);
 
 // ============================================================================
 // Error Handling
