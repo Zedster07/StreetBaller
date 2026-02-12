@@ -1,0 +1,16 @@
+node_modules
+npm-debug.log
+dist
+.git
+.gitignore
+.env.local
+.DS_Store
+tests
+*.spec.ts
+coverage
+.jest
+jest.config.js
+FIREBASE_SETUP.ts
+MATCH_SCORING_GUIDE.md
+test-*.js
+logs
