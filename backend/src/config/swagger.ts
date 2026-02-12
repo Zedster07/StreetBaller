@@ -103,6 +103,7 @@ const options = {
     './src/routes/match.routes.ts',
     './src/routes/dispute.routes.ts',
     './src/routes/leaderboard.routes.ts',
+    './src/routes/trust.routes.ts',
   ],
 };
 

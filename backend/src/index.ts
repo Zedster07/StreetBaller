@@ -15,6 +15,7 @@ import teamRoutes from './routes/team.routes';
 import matchRoutes from './routes/match.routes';
 import disputeRoutes from './routes/dispute.routes';
 import leaderboardRoutes from './routes/leaderboard.routes';
+import trustRoutes from './routes/trust.routes';
 
 // Middleware
 import { errorHandler } from './middleware/errorHandler';
@@ -80,6 +81,7 @@ app.use('/api/teams', teamRoutes);
 app.use('/api/matches', matchRoutes);
 app.use('/api/disputes', disputeRoutes);
 app.use('/api/leaderboards', leaderboardRoutes);
+app.use('/api/trust', trustRoutes);
 
 // ============================================================================
 // Error Handling

@@ -57,7 +57,13 @@ export class MatchController {
       });
     }
 
-    const match = await this.matchService.createMatch(validation.data, userId);
+    const match = await this.matchService.createMatch(
+      {
+        ...validation.data,
+        matchDate: new Date(validation.data.matchDate),
+      },
+      userId
+    );
 
     res.status(201).json({
       success: true,
