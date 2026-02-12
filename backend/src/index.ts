@@ -11,6 +11,7 @@ import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
 import teamRoutes from './routes/team.routes';
 import matchRoutes from './routes/match.routes';
+import disputeRoutes from './routes/dispute.routes';
 
 // Middleware
 import { errorHandler } from './middleware/errorHandler';
@@ -51,6 +52,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/teams', teamRoutes);
 app.use('/api/matches', matchRoutes);
+app.use('/api/disputes', disputeRoutes);
 
 // ============================================================================
 // Error Handling
