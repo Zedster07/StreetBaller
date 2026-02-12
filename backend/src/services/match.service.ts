@@ -75,11 +75,11 @@ export class MatchService {
         await prisma.matchEvent.create({
           data: {
             matchId,
-            userId: event.scorerId,
+            scorerId: event.scorerId,
             eventType: event.eventType || 'goal',
             minute: event.minute,
             teamId: event.teamId,
-            assistedBy: event.assisterId,
+            assisterId: event.assisterId,
           },
         });
       }
@@ -128,14 +128,21 @@ export class MatchService {
       throw new Error('Match not found');
     }
 
-    // Identify defending team (the one who reported the score)
-    const defendingTeamId = match.team1Id === disputingTeamId ? match.team2Id : match.team1Id;
+    // Get a captain from the disputing team
+    const captain = await prisma.teamMembership.findFirst({
+      where: { teamId: disputingTeamId },
+      select: { userId: true },
+    });
+
+    if (!captain) {
+      throw new Error('Team captain not found');
+    }
 
     const dispute = await prisma.dispute.create({
       data: {
         matchId,
-        disputingTeamId,
-        defendingTeamId,
+        disputedByTeamId: disputingTeamId,
+        disputedByCaptainId: captain.userId,
         reason: reason || 'Score disagreement',
         status: 'open',
       },
@@ -144,7 +151,7 @@ export class MatchService {
     // Update match status to disputed
     await this.matchModel.updateStatus(matchId, 'disputed');
 
-    logger.info('Dispute created:', { matchId, disputingTeamId, defendingTeamId });
+    logger.info('Dispute created:', { matchId, disputingTeamId });
 
     return {
       disputed: true,
@@ -180,11 +187,11 @@ export class MatchService {
     const [winningTeam, losingTeam] = await Promise.all([
       prisma.team.findUnique({
         where: { id: winningTeamId },
-        include: { TeamMembership: true },
+        include: { teamMemberships: true },
       }),
       prisma.team.findUnique({
         where: { id: losingTeamId },
-        include: { TeamMembership: true },
+        include: { teamMemberships: true },
       }),
     ]);
 
@@ -195,21 +202,21 @@ export class MatchService {
     };
 
     if (winningTeam) {
-      for (const membership of winningTeam.TeamMembership) {
+      for (const membership of winningTeam.teamMemberships) {
         rewards.winners.push({
           userId: membership.userId,
-          skillCoins: SKILL_COINS_CONFIG.WIN,
-          trustPoints: TRUST_POINTS_CONFIG.WIN,
+          skillCoins: SKILL_COINS_CONFIG.MATCH_WON,
+          trustPoints: TRUST_POINTS_CONFIG.SHOW_UP,
         });
       }
     }
 
     if (losingTeam) {
-      for (const membership of losingTeam.TeamMembership) {
+      for (const membership of losingTeam.teamMemberships) {
         rewards.losers.push({
           userId: membership.userId,
-          skillCoins: SKILL_COINS_CONFIG.PARTICIPATION,
-          trustPoints: TRUST_POINTS_CONFIG.PARTICIPATION,
+          skillCoins: SKILL_COINS_CONFIG.MATCH_PLAYED,
+          trustPoints: TRUST_POINTS_CONFIG.SHOW_UP,
         });
       }
     }

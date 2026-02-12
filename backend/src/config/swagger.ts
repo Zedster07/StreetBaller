@@ -104,6 +104,7 @@ const options = {
     './src/routes/dispute.routes.ts',
     './src/routes/leaderboard.routes.ts',
     './src/routes/trust.routes.ts',
+    './src/routes/match-event.routes.ts',
   ],
 };
 
