@@ -9,10 +9,43 @@ import { logger } from '../utils/logger';
 const router = Router();
 
 /**
- * POST /api/teams
- * Create a new team
- * Headers: Authorization: Bearer <token>
- * Body: { name, description, logoUrl, primaryColor, secondaryColor, formation }
+ * @swagger
+ * /api/teams:
+ *   post:
+ *     summary: Create a new team
+ *     tags:
+ *       - Teams
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "Manchester United Legends"
+ *               description:
+ *                 type: string
+ *               logoUrl:
+ *                 type: string
+ *                 format: uri
+ *               primaryColor:
+ *                 type: string
+ *               secondaryColor:
+ *                 type: string
+ *               formation:
+ *                 type: string
+ *                 example: "4-3-3"
+ *     responses:
+ *       201:
+ *         description: Team created successfully
+ *       401:
+ *         description: Unauthorized
  */
 router.post('/', verifyFirebaseToken, catchAsync(async (req: Request, res: Response) => {
   const userId = req.user?.uid;
@@ -61,8 +94,24 @@ router.post('/', verifyFirebaseToken, catchAsync(async (req: Request, res: Respo
 }));
 
 /**
- * GET /api/teams/:id
- * Get team details
+ * @swagger
+ * /api/teams/{id}:
+ *   get:
+ *     summary: Get team details with members
+ *     tags:
+ *       - Teams
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Team details retrieved
+ *       404:
+ *         description: Team not found
  */
 router.get('/:id', catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -92,10 +141,42 @@ router.get('/:id', catchAsync(async (req: Request, res: Response) => {
 }));
 
 /**
- * POST /api/teams/:id/members
- * Add member to team (captain only)
- * Headers: Authorization: Bearer <token>
- * Body: { userId, role?: 'captain' | 'player' }
+ * @swagger
+ * /api/teams/{id}/members:
+ *   post:
+ *     summary: Add a member to team
+ *     tags:
+ *       - Teams
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *             properties:
+ *               userId:
+ *                 type: string
+ *                 format: uuid
+ *               role:
+ *                 type: string
+ *                 enum: ["player", "captain"]
+ *                 default: "player"
+ *     responses:
+ *       201:
+ *         description: Member added to team
+ *       401:
+ *         description: Unauthorized
  */
 router.post('/:id/members', verifyFirebaseToken, catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -118,9 +199,32 @@ router.post('/:id/members', verifyFirebaseToken, catchAsync(async (req: Request,
 }));
 
 /**
- * DELETE /api/teams/:id/members/:userId
- * Remove member from team (captain only)
- * Headers: Authorization: Bearer <token>
+ * @swagger
+ * /api/teams/{id}/members/{userId}:
+ *   delete:
+ *     summary: Remove a member from team
+ *     tags:
+ *       - Teams
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Member removed from team
+ *       401:
+ *         description: Unauthorized
  */
 router.delete('/:id/members/:userId', verifyFirebaseToken, catchAsync(async (req: Request, res: Response) => {
   const { id, userId } = req.params;
@@ -143,10 +247,45 @@ router.delete('/:id/members/:userId', verifyFirebaseToken, catchAsync(async (req
 }));
 
 /**
- * PATCH /api/teams/:id
- * Update team details
- * Headers: Authorization: Bearer <token>
- * Body: Partial team fields
+ * @swagger
+ * /api/teams/{id}:
+ *   patch:
+ *     summary: Update team details
+ *     tags:
+ *       - Teams
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               logoUrl:
+ *                 type: string
+ *               primaryColor:
+ *                 type: string
+ *               secondaryColor:
+ *                 type: string
+ *               formation:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Team updated successfully
+ *       401:
+ *         description: Unauthorized
  */
 router.patch('/:id', verifyFirebaseToken, catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;

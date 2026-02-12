@@ -3,14 +3,21 @@
 **This file contains context specific to the StreetBaller project.**
 
 ## Project Status
-✅ **Backend Foundation Complete** — Express server running, 12 API endpoints working, PostgreSQL synced, Firebase Admin SDK integrated with real service account credentials.
+✅ **Backend Foundation Complete** — Express server running, 16 API endpoints working, PostgreSQL synced, Firebase Admin SDK integrated with real service account credentials.
 - Server: Running on localhost:3000
 - Database: PostgreSQL 16 (15 tables synced via Prisma)
 - Auth: Firebase Admin SDK with real service account
-- API Tests: All 4 route groups passing (auth, users, teams, matches)
-- GitHub: 6 commits - fully tracked
+- API Tests: All endpoints passing
+- GitHub: 7 commits - fully tracked
 
-**Current Phase**: Core API implementation complete, ready for advanced endpoints (match scoring, disputes, leaderboards, tournaments).
+**Current Phase**: Match scoring & dispute resolution implemented. Ready for leaderboards, tournaments, and advanced features.
+
+**Recent Implementation**:
+- ✅ Match scoring endpoints with full validation
+- ✅ Dispute creation and voting mechanism  
+- ✅ Team captain approval/dispute flow
+- ✅ Trust point adjustments based on outcomes
+- ✅ Comprehensive API documentation
 
 ## Tech Stack
 _Updated based on brainstorming:_

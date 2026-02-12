@@ -4,7 +4,9 @@ import cors from 'cors';
 import helmet from 'helmet';
 import 'express-async-errors';
 import dotenv from 'dotenv';
+import swaggerUi from 'swagger-ui-express';
 import { logger } from './utils/logger';
+import { specs } from './config/swagger';
 
 // Routes
 import authRoutes from './routes/auth.routes';
@@ -42,6 +44,34 @@ app.use(express.urlencoded({ extended: true }));
 
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// ============================================================================
+// Swagger/OpenAPI Documentation
+// ============================================================================
+
+app.use(
+  '/api-docs',
+  swaggerUi.serve,
+  swaggerUi.setup(specs, {
+    swaggerOptions: {
+      deepLinking: true,
+      persistAuthorization: true,
+      displayOperationId: true,
+      presets: [
+        swaggerUi.presets.apis,
+        // Highlight code preset
+        require('swagger-ui-express/swagger-ui.css'),
+      ],
+    },
+    customCss: '.topbar { display: none }',
+    customSiteTitle: 'StreetBaller API Documentation',
+  })
+);
+
+app.get('/api-docs.json', (req, res) => {
+  res.set('Content-Type', 'application/json');
+  res.send(specs);
 });
 
 // ============================================================================

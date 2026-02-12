@@ -15,8 +15,24 @@ const playerVoteSchema = z.object({
 });
 
 /**
- * GET /api/disputes/:id
- * Get dispute details with voting information
+ * @swagger
+ * /api/disputes/{id}:
+ *   get:
+ *     summary: Get dispute details with voting information
+ *     tags:
+ *       - Disputes
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Dispute details retrieved
+ *       404:
+ *         description: Dispute not found
  */
 router.get(
   '/:id',
@@ -32,8 +48,15 @@ router.get(
 );
 
 /**
- * GET /api/disputes
- * Get all open disputes
+ * @swagger
+ * /api/disputes:
+ *   get:
+ *     summary: Get all open disputes
+ *     tags:
+ *       - Disputes
+ *     responses:
+ *       200:
+ *         description: List of open disputes
  */
 router.get(
   '/',
@@ -48,10 +71,44 @@ router.get(
 );
 
 /**
- * POST /api/disputes/:id/vote
- * Register a player vote for dispute resolution
- * Headers: Authorization: Bearer <token>
- * Body: { playerId, voteForTeamId }
+ * @swagger
+ * /api/disputes/{id}/vote:
+ *   post:
+ *     summary: Register a player vote for dispute resolution
+ *     tags:
+ *       - Disputes
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - playerId
+ *               - voteForTeamId
+ *             properties:
+ *               playerId:
+ *                 type: string
+ *                 format: uuid
+ *               voteForTeamId:
+ *                 type: string
+ *                 format: uuid
+ *     responses:
+ *       201:
+ *         description: Vote recorded successfully
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
  */
 router.post(
   '/:id/vote',
