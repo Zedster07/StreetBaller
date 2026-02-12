@@ -1,12 +1,12 @@
 // User Service - Business Logic Layer
 // Contains all user-related business logic
 
-import { UserModel } from '../models/user.model';
+import userModel from '../models/user.model';
 import { CreatePlayerProfileDto, UpdatePlayerProfileDto } from '../types/user.types';
 import { logger } from '../utils/logger';
 
 export class UserService {
-  private userModel = UserModel;
+  private userModel = userModel;
 
   // Register a new user
   async registerUser(email: string, firebaseUid: string) {

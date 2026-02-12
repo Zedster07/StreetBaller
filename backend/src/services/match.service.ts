@@ -1,13 +1,13 @@
 // Match Service - Business Logic Layer
 // Contains all match-related business logic including dispute resolution
 
-import { MatchModel } from '../models/match.model';
+import matchModel from '../models/match.model';
 import { CreateMatchDto } from '../types/match.types';
 import { SKILL_COINS_CONFIG, TRUST_POINTS_CONFIG } from '../config/constants';
 import { logger } from '../utils/logger';
 
 export class MatchService {
-  private matchModel = MatchModel;
+  private matchModel = matchModel;
 
   // Create a new match (challenge)
   async createMatch(data: CreateMatchDto, challengeCreatorId: string) {

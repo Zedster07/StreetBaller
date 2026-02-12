@@ -1,5 +1,5 @@
 // Placeholder seed file for development data
-import prisma from '../config/database';
+import prisma from '../src/config/database';
 
 async function main() {
   console.log('🌱 Seeding database...');

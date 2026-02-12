@@ -111,7 +111,7 @@ model Team {
   matchesAsTeam2  Match[]             @relation("Team2")
   matchEvents     MatchEvent[]
   matchParticipations MatchParticipation[]
-  disputesDisputed DisputeTeam[]       @relation("DisputedTeam")
+  disputes        Dispute[]           @relation("DisputedTeam")
   disputeVotes    DisputeVote[]
   tournamentTeams TournamentTeam[]
 
@@ -275,23 +275,11 @@ model Dispute {
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
 
-  disputedByTeam DisputeTeam   @relation(fields: [disputedByTeamId], references: [teamId], onDelete: Cascade)
+  disputedByTeam Team  @relation("DisputedTeam", fields: [disputedByTeamId], references: [id], onDelete: Cascade)
   disputeVotes   DisputeVote[]
   matches        Match[]
 
   @@map("disputes")
-}
-
-model DisputeTeam {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  disputeId   String   @db.Uuid
-  teamId      String   @db.Uuid
-
-  dispute Dispute @relation(fields: [disputeId], references: [id], onDelete: Cascade)
-  team    Team    @relation("DisputedTeam", fields: [teamId], references: [id])
-
-  @@unique([disputeId, teamId])
-  @@map("dispute_teams")
 }
 
 model DisputeVote {
@@ -351,8 +339,8 @@ model Endorsement {
 
   createdAt        DateTime @default(now())
 
-  endorsed Endorsement @relation("EndorsementRelation", fields: [endorsedUserId], references: [id])
-  endorser Endorsement @relation("EndorsementRelation", fields: [endorserUserId], references: [id])
+  endorsed User @relation("Endorsed", fields: [endorsedUserId], references: [id], onDelete: Cascade)
+  endorser User @relation("Endorser", fields: [endorserUserId], references: [id], onDelete: Cascade)
 
   @@unique([matchId, endorsedUserId, endorserUserId, trait])
   @@map("endorsements")

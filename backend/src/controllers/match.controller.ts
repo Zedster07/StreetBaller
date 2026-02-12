@@ -1,11 +1,11 @@
 // Match Controller - Request Handling & Validation Layer
 import { Request, Response } from 'express';
-import { MatchService } from '../services/match.service';
+import matchService from '../services/match.service';
 import { catchAsync } from '../middleware/errorHandler';
 import { logger } from '../utils/logger';
 
 export class MatchController {
-  private matchService = MatchService;
+  private matchService = matchService;
 
   // Create match
   createMatch = catchAsync(async (req: Request, res: Response) => {

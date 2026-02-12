@@ -1,11 +1,11 @@
 // User Controller - Request Handling & Validation Layer
 import { Request, Response } from 'express';
-import { UserService } from '../services/user.service';
+import userService from '../services/user.service';
 import { catchAsync } from '../middleware/errorHandler';
 import { logger } from '../utils/logger';
 
 export class UserController {
-  private userService = UserService;
+  private userService = userService;
 
   // Register user
   registerUser = catchAsync(async (req: Request, res: Response) => {
