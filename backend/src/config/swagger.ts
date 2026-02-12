@@ -102,6 +102,7 @@ const options = {
     './src/routes/team.routes.ts',
     './src/routes/match.routes.ts',
     './src/routes/dispute.routes.ts',
+    './src/routes/leaderboard.routes.ts',
   ],
 };
 

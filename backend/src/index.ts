@@ -14,6 +14,7 @@ import userRoutes from './routes/user.routes';
 import teamRoutes from './routes/team.routes';
 import matchRoutes from './routes/match.routes';
 import disputeRoutes from './routes/dispute.routes';
+import leaderboardRoutes from './routes/leaderboard.routes';
 
 // Middleware
 import { errorHandler } from './middleware/errorHandler';
@@ -58,11 +59,6 @@ app.use(
       deepLinking: true,
       persistAuthorization: true,
       displayOperationId: true,
-      presets: [
-        swaggerUi.presets.apis,
-        // Highlight code preset
-        require('swagger-ui-express/swagger-ui.css'),
-      ],
     },
     customCss: '.topbar { display: none }',
     customSiteTitle: 'StreetBaller API Documentation',
@@ -83,6 +79,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/teams', teamRoutes);
 app.use('/api/matches', matchRoutes);
 app.use('/api/disputes', disputeRoutes);
+app.use('/api/leaderboards', leaderboardRoutes);
 
 // ============================================================================
 // Error Handling
