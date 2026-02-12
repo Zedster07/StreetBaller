@@ -1,0 +1,421 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// USERS & PROFILES
+// ============================================================================
+
+model User {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email            String   @unique
+  phoneNumber      String?
+  authProvider     String   @default("firebase")
+  firebaseUid      String?  @unique
+  verifiedEmail    Boolean  @default(false)
+  verifiedPhone    Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  playerProfile        PlayerProfile?
+  createdTeams         Team[]
+  teamMemberships      TeamMembership[]
+  refereeMatches       Match[]           @relation("Referee")
+  matchParticipations  MatchParticipation[]
+  matchEvents          MatchEvent[]
+  trustTransactions    TrustTransaction[]
+  endorsements         Endorsement[]     @relation("Endorser")
+  endorsedBy           Endorsement[]     @relation("Endorsed")
+  disputeVotes         DisputeVote[]
+  createdPitches       Pitch[]
+  createdTournaments   Tournament[]
+
+  @@map("users")
+}
+
+model PlayerProfile {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId            String   @unique @db.Uuid
+  displayName       String
+  dateOfBirth       DateTime @db.Date
+  heightCm          Int?
+  weightKg          Int?
+  preferredPosition String?
+  dominantFoot      String?
+  profilePhotoUrl   String?
+  bio               String?
+
+  // Accumulated Stats
+  gamesPlayed       Int      @default(0)
+  goalsScored       Int      @default(0)
+  assists           Int      @default(0)
+  wins              Int      @default(0)
+  losses            Int      @default(0)
+  draws             Int      @default(0)
+
+  // Currency/Reputation
+  skillCoins        Int      @default(0)
+  trustPoints       Int      @default(0)
+  reputation        Int      @default(0)
+  tournamentPoints  Int      @default(0)
+
+  // Ratings
+  overallRating     Float    @default(0.0)
+  skillRating       Float    @default(1200.0)
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("player_profiles")
+}
+
+// ============================================================================
+// TEAMS & MEMBERSHIPS
+// ============================================================================
+
+model Team {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdById     String   @db.Uuid
+  name            String
+  description     String?
+  logoUrl         String?
+  primaryColor    String?
+  secondaryColor  String?
+  formation       String?
+
+  // Stats
+  gamesPlayed     Int      @default(0)
+  wins            Int      @default(0)
+  losses          Int      @default(0)
+  draws           Int      @default(0)
+  goalsFor        Int      @default(0)
+  goalsAgainst    Int      @default(0)
+
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  createdBy       User                @relation(fields: [createdById], references: [id])
+  teamMemberships TeamMembership[]
+  matchesAsTeam1  Match[]             @relation("Team1")
+  matchesAsTeam2  Match[]             @relation("Team2")
+  matchEvents     MatchEvent[]
+  matchParticipations MatchParticipation[]
+  disputesDisputed DisputeTeam[]       @relation("DisputedTeam")
+  disputeVotes    DisputeVote[]
+  tournamentTeams TournamentTeam[]
+
+  @@map("teams")
+}
+
+model TeamMembership {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  teamId        String   @db.Uuid
+  userId        String   @db.Uuid
+  role          String   @default("player") // 'captain', 'player'
+  jerseyNumber  Int?
+  joinedAt      DateTime @default(now())
+  leftAt        DateTime?
+
+  team  Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user  User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+  @@map("team_memberships")
+}
+
+// ============================================================================
+// PITCHES
+// ============================================================================
+
+model Pitch {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String
+  address       String
+  city          String?
+  latitude      Float?
+  longitude     Float?
+  pitchType     String?  // 'Cage', 'Open Field', 'Indoor', 'Turf'
+  surfaceType   String?
+  capacity      Int?
+  amenities     String?  // JSON array
+
+  isActive      Boolean  @default(true)
+  createdById   String?  @db.Uuid
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  createdBy     User?    @relation(fields: [createdById], references: [id])
+  matches       Match[]
+
+  @@map("pitches")
+}
+
+// ============================================================================
+// MATCHES & MATCH EVENTS
+// ============================================================================
+
+model Match {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  
+  team1Id             String   @db.Uuid
+  team2Id             String   @db.Uuid
+  challengeCreatorId  String?  @db.Uuid
+  pitchId             String   @db.Uuid
+  matchDate           DateTime
+  format              String   // '5v5', '7v7', '11v11'
+  refereeId           String?  @db.Uuid
+
+  status              String   @default("scheduled") // 'scheduled', 'in-progress', 'pending-confirmation', 'completed', 'disputed'
+
+  // Score
+  team1Score          Int?
+  team2Score          Int?
+
+  // Confirmation
+  team1CaptainApproved Boolean @default(false)
+  team2CaptainApproved Boolean @default(false)
+  bothCaptainsApprovedAt DateTime?
+
+  // Dispute
+  isDisputed          Boolean  @default(false)
+  disputeId           String?  @db.Uuid
+
+  totalGoals          Int      @default(0)
+  totalAssists        Int      @default(0)
+
+  notes               String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  team1              Team               @relation("Team1", fields: [team1Id], references: [id])
+  team2              Team               @relation("Team2", fields: [team2Id], references: [id])
+  pit                Pitch              @relation(fields: [pitchId], references: [id])
+  referee            User?              @relation("Referee", fields: [refereeId], references: [id])
+  matchParticipations MatchParticipation[]
+  matchEvents        MatchEvent[]
+  dispute            Dispute?           @relation(fields: [disputeId], references: [id])
+  tournamentMatch    TournamentMatch?
+
+  @@map("matches")
+}
+
+model MatchParticipation {
+  id                    String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  matchId               String   @db.Uuid
+  userId                String   @db.Uuid
+  teamId                String   @db.Uuid
+
+  isPresent             Boolean  @default(false)
+  checkedInByCaptainAt  DateTime?
+  gpsVerified           Boolean  @default(false)
+
+  isGuest               Boolean  @default(false)
+  guestRating           Float?
+
+  position              String?
+  status                String   @default("completed")
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  match  Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  user   User  @relation(fields: [userId], references: [id])
+  team   Team  @relation(fields: [teamId], references: [id])
+
+  @@unique([matchId, userId])
+  @@map("match_participations")
+}
+
+model MatchEvent {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  matchId       String   @db.Uuid
+  teamId        String   @db.Uuid
+  scorerId      String   @db.Uuid
+  assisterId    String?  @db.Uuid
+
+  eventType     String   @default("goal") // 'goal', 'own-goal'
+  minute        Int?
+
+  createdAt     DateTime @default(now())
+
+  match    Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  team     Team  @relation(fields: [teamId], references: [id])
+  scorer   User  @relation(fields: [scorerId], references: [id])
+
+  @@map("match_events")
+}
+
+// ============================================================================
+// DISPUTES & VOTING
+// ============================================================================
+
+model Dispute {
+  id                      String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  matchId                 String   @unique @db.Uuid
+  disputedByTeamId        String   @db.Uuid
+  disputedByCaptainId     String   @db.Uuid
+
+  reason                  String?
+
+  status                  String   @default("voting") // 'voting', 'resolved'
+  resolution              String?  // 'ref-upheld', 'score-invalidated'
+  resolvedAt              DateTime?
+
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  disputedByTeam DisputeTeam   @relation(fields: [disputedByTeamId], references: [teamId], onDelete: Cascade)
+  disputeVotes   DisputeVote[]
+  matches        Match[]
+
+  @@map("disputes")
+}
+
+model DisputeTeam {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  disputeId   String   @db.Uuid
+  teamId      String   @db.Uuid
+
+  dispute Dispute @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  team    Team    @relation("DisputedTeam", fields: [teamId], references: [id])
+
+  @@unique([disputeId, teamId])
+  @@map("dispute_teams")
+}
+
+model DisputeVote {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  disputeId   String   @db.Uuid
+  voterId     String   @db.Uuid
+  teamId      String   @db.Uuid
+
+  vote        String   // 'ref-correct', 'ref-wrong'
+  weight      Float    @default(1.0)
+
+  createdAt   DateTime @default(now())
+
+  dispute Dispute @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  voter   User    @relation(fields: [voterId], references: [id])
+  team    Team    @relation(fields: [teamId], references: [id])
+
+  @@unique([disputeId, voterId])
+  @@map("dispute_votes")
+}
+
+// ============================================================================
+// TRUST SYSTEM
+// ============================================================================
+
+model TrustTransaction {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String   @db.Uuid
+  matchId         String?  @db.Uuid
+
+  currencyType    String   // 'sc', 'tp', 'rep', 'trp'
+  amount          Int
+  reason          String?
+
+  balanceBefore   Int?
+  balanceAfter    Int?
+
+  createdAt       DateTime @default(now())
+
+  user  User   @relation(fields: [userId], references: [id])
+
+  @@map("trust_transactions")
+}
+
+// ============================================================================
+// ENDORSEMENTS
+// ============================================================================
+
+model Endorsement {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  matchId          String   @db.Uuid
+  endorsedUserId   String   @db.Uuid
+  endorserUserId   String   @db.Uuid
+
+  trait            String   // 'speed', 'vision', 'strength', 'finishing', 'passing'
+  rating           Int
+
+  createdAt        DateTime @default(now())
+
+  endorsed Endorsement @relation("EndorsementRelation", fields: [endorsedUserId], references: [id])
+  endorser Endorsement @relation("EndorsementRelation", fields: [endorserUserId], references: [id])
+
+  @@unique([matchId, endorsedUserId, endorserUserId, trait])
+  @@map("endorsements")
+}
+
+// ============================================================================
+// TOURNAMENTS
+// ============================================================================
+
+model Tournament {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdById     String   @db.Uuid
+  
+  name            String
+  description     String?
+  
+  tournamentType  String?  // 'single-elimination', 'round-robin', 'league'
+  format          String?  // '5v5', '7v7', '11v11'
+  
+  startDate       DateTime @db.Date
+  endDate         DateTime? @db.Date
+  
+  maxTeams        Int?
+  
+  status          String   @default("upcoming") // 'upcoming', 'in-progress', 'completed'
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  createdBy       User               @relation(fields: [createdById], references: [id])
+  tournamentTeams TournamentTeam[]
+  tournamentMatches TournamentMatch[]
+
+  @@map("tournaments")
+}
+
+model TournamentTeam {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tournamentId    String   @db.Uuid
+  teamId          String   @db.Uuid
+  
+  points          Int      @default(0)
+  goalsFor        Int      @default(0)
+  goalsAgainst    Int      @default(0)
+  
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  team       Team       @relation(fields: [teamId], references: [id])
+
+  @@unique([tournamentId, teamId])
+  @@map("tournament_teams")
+}
+
+model TournamentMatch {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tournamentId    String   @db.Uuid
+  matchId         String   @unique @db.Uuid
+  
+  round           Int?
+  
+  createdAt       DateTime @default(now())
+
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  match      Match      @relation(fields: [matchId], references: [id])
+
+  @@map("tournament_matches")
+}
