@@ -34,3 +34,6 @@ postgres_data/
 # Temporary
 temp/
 tmp/
+
+# Playwright CLI artifacts
+.playwright-cli/
